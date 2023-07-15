@@ -1,6 +1,7 @@
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
+const mongoose = require("mongoose")
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var indexRouter = require('./routes/index');
@@ -20,6 +21,19 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+const url = "mongodb://localhost:27017/nucampsite"
+const connect = mongoose.connect(url, {
+  useCreateIndex: true,
+  useFindAndModify: false,
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+
+connect.then(
+  () => console.log("Connected correctly to server"),
+  err => console.log(err)
+)
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);

@@ -1,53 +1,82 @@
-const express = require('express');
+const express = require("express")
+const Partner = require('../models/partner.js')
 
-const partnerRoute = express.Router();
+const partnerRoute = express.Router()
 partnerRoute
   .route("/")
-  .all((req, res, next) => {
-    res.statusCode = 200
-    res.setHeader("Content-type", "text/plain")
-    next()
+  .get((req, res, next) => {
+    Partner.find()
+      .then(partner => {
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.json(partner)
+      })
+      .catch(err => next(err))
   })
-  .get((req, res) => {
-    res.end("Get All partners")
-  })
-  .post((req, res) => {
-    res.end(`Will add the partner: ${req.body.name} with description: ${req.body.description}`)
+  .post((req, res, next) => {
+    Partner.create(req.body)
+      .then(partner => {
+        console.log("Partners Created ", partner)
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.json(partner)
+      })
+      .catch(err => next(err))
   })
   .put((req, res) => {
     res.statusCode = 403
-    res.end(`Cannot perform this operation in ${req.route.path}`)
+    res.end("PUT operation not supported on /partner")
   })
-  .delete((req, res) => {
-    res.end("Deletes All partners")
+  .delete((req, res, next) => {
+    Partner.deleteMany()
+      .then(response => {
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.json(response)
+      })
+      .catch(err => next(err))
   })
 
+// PartnerById
 
-  // Partner By Id
+partnerRoute
+  .route("/:partnerId")
+  .get((req, res, next) => {
+    Partner.findById(req.params.partnerId)
+      .then(partner => {
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.json(partner)
+      })
+      .catch(err => next(err))
+  })
+  .post((req, res) => {
+    res.statusCode = 403
+    res.end(`POST operation not supported on /partner/${req.params.partnerId}`)
+  })
+  .put((req, res, next) => {
+    Partner.findByIdAndUpdate(
+      req.params.partnerId,
+      {
+        $set: req.body
+      },
+      { new: true }
+    )
+      .then(partner => {
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.json(partner)
+      })
+      .catch(err => next(err))
+  })
+  .delete((req, res, next) => {
+    Partner.findByIdAndDelete(req.params.partnerId)
+      .then(response => {
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.json(response)
+      })
+      .catch(err => next(err))
+  })
 
-  partnerRoute
-    .route("/:partnerId")
-    .all((req, res, next) => {
-      res.statusCode = 200
-      res.setHeader("Content-type", "text/plain")
-      next()
-    })
-    .get((req, res) => {
-      res.end("Get Single partner")
-    })
-    .post((req, res) => {
-      res.statusCode = 403
-      res.end(`Cannot perform this operation in ${req.route.path.replace(":", "")}`)
-    })
-    .put((req, res) => {
-      res.status(200)
-      res.json(`Will update the partner: ${req.body.name} with description: ${req.body.description}`)
-    })
-    .delete((req, res) => {
-      res.end("Delete partner")
-    })
-
-
-
-
-module.exports = partnerRoute;
+module.exports = partnerRoute
